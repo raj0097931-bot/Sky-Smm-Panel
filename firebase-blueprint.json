@@ -1,0 +1,140 @@
+{
+  "entities": {
+    "Giveaway": {
+      "title": "Giveaway",
+      "description": "Represents a daily giveaway created by admin.",
+      "type": "object",
+      "properties": {
+        "categoryId": { "type": "string", "description": "ID of the selected category" },
+        "categoryName": { "type": "string", "description": "Name of the selected category" },
+        "serviceId": { "type": "string", "description": "ID of the selected service" },
+        "serviceName": { "type": "string", "description": "Name of the selected service" },
+        "quantity": { "type": "number", "description": "Fixed quantity for the giveaway" },
+        "maxUsers": { "type": "number", "description": "Maximum number of users who can join" },
+        "refresh24h": { "type": "boolean", "description": "Whether to reset participants every 24 hours" },
+        "lastResetAt": { "type": "string", "format": "date-time", "description": "Last time the giveaway was reset" },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Creation time" },
+        "updatedAt": { "type": "string", "format": "date-time", "description": "Last update time" }
+      },
+      "required": ["categoryId", "serviceId", "quantity", "maxUsers"]
+    },
+    "GiveawayParticipant": {
+      "title": "Giveaway Participant",
+      "description": "Represents a user who joined a giveaway.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string", "description": "UID of the user" },
+        "username": { "type": "string", "description": "Username of the user" },
+        "joinedAt": { "type": "string", "format": "date-time", "description": "Time the user joined" }
+      },
+      "required": ["userId", "username", "joinedAt"]
+    },
+    "ChatMessage": {
+      "title": "Chat Message",
+      "description": "A message sent in the global chat.",
+      "type": "object",
+      "properties": {
+        "text": { "type": "string", "description": "The message text" },
+        "uid": { "type": "string", "description": "UID of the sender" },
+        "displayName": { "type": "string", "description": "Display name of the sender" },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Time the message was sent" }
+      },
+      "required": ["text", "uid", "displayName", "createdAt"]
+    },
+    "TypingStatus": {
+      "title": "Typing Status",
+      "description": "Real-time typing indicator for a user.",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string", "description": "Name of the typing user" },
+        "timestamp": { "type": "string", "format": "date-time", "description": "Last update time" }
+      },
+      "required": ["name", "timestamp"]
+    },
+    "LeaderboardEntry": {
+      "title": "Leaderboard Entry",
+      "description": "A user's entry in the public leaderboard.",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string", "description": "Display name of the user" },
+        "totalSpent": { "type": "number", "description": "Total amount spent by the user" },
+        "updatedAt": { "type": "string", "format": "date-time", "description": "Last update time" }
+      },
+      "required": ["name", "totalSpent"]
+    },
+    "SpinnerConfig": {
+      "title": "Spinner Config",
+      "description": "Configuration for the daily spin wheel.",
+      "type": "object",
+      "properties": {
+        "options": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "amount": { "type": "number" },
+              "probability": { "type": "number" }
+            }
+          }
+        },
+        "eligibilityDays": { "type": "number" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      }
+    },
+    "SpinnerLog": {
+      "title": "Spinner Log",
+      "description": "Log of a user's spin result.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "userName": { "type": "string" },
+        "amount": { "type": "number" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "pinned": { "type": "boolean" }
+      }
+    },
+    "AdminConfig": {
+      "title": "Admin Config",
+      "description": "Sensitive configuration for admin access.",
+      "type": "object",
+      "properties": {
+        "adminPassword": { "type": "string", "description": "Password to access the admin panel" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      }
+    }
+  },
+  "firestore": {
+    "/settings/admin_config": {
+      "schema": "AdminConfig",
+      "description": "Sensitive admin settings."
+    },
+    "/settings/spinner_config": {
+      "schema": "SpinnerConfig",
+      "description": "Global configuration for the spin wheel."
+    },
+    "/spinner_logs": {
+      "schema": "SpinnerLog",
+      "description": "Logs of user spins."
+    },
+    "/giveaways": {
+      "schema": "Giveaway",
+      "description": "Collection of daily giveaways."
+    },
+    "/giveaways/{giveawayId}/participants": {
+      "schema": "GiveawayParticipant",
+      "description": "Subcollection of users who joined a specific giveaway."
+    },
+    "/global_chat": {
+      "schema": "ChatMessage",
+      "description": "Collection of global chat messages."
+    },
+    "/typing_status": {
+      "schema": "TypingStatus",
+      "description": "Collection of real-time typing statuses."
+    },
+    "/leaderboard": {
+      "schema": "LeaderboardEntry",
+      "description": "Public leaderboard of users ranked by total spending."
+    }
+  }
+}

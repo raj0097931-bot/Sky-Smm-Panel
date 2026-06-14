@@ -1,0 +1,10 @@
+{
+  "name": "Remix: LuxeServices Premium",
+  "description": "An ultra-premium service marketplace with real-time tracking, multi-theme support, and integrated wallet system.",
+  "requestFramePermissions": [
+    "microphone"
+  ],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

@@ -1,0 +1,191 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // ===============================================================
+    // Assumed Data Model
+    // ===============================================================
+    //
+    // Collection: users
+    // Fields:
+    //   - name: string (required)
+    //   - email: string (required)
+    //   - phone: string (optional)
+    //   - walletBalance: number (required)
+    //   - isBlocked: boolean (optional)
+    //   - role: string (required, 'admin' or 'user')
+    //
+    // Collection: giveaways
+    // Fields:
+    //   - category: string (required)
+    //   - serviceId: string (required)
+    //   - serviceName: string (required)
+    //   - categoryIcon: string (required)
+    //   - quantity: number (required)
+    //   - maxUsers: number (required)
+    //   - refresh24h: boolean (required)
+    //   - enabled: boolean (required)
+    //   - createdAt: timestamp (required)
+    //   - updatedAt: timestamp (required)
+    //
+    // Collection: giveaway_participants
+    // Fields:
+    //   - giveawayId: string (required)
+    //   - userId: string (required)
+    //   - userName: string (required)
+    //   - createdAt: timestamp (required)
+    //
+    // Collection: services
+    // Fields:
+    //   - name: string (required)
+    //   - category: string (required)
+    //   - pricePerUnit: number (required)
+    //   - enabled: boolean (required)
+    //
+    // Collection: categories
+    // Fields:
+    //   - name: string (required)
+    //
+    // Collection: orders
+    // Fields:
+    //   - userId: string (required)
+    //   - serviceId: string (required)
+    //   - status: string (required)
+    //
+    // Collection: fundRequests
+    // Fields:
+    //   - userId: string (required)
+    //   - amount: number (required)
+    //   - status: string (required)
+    //
+    // Collection: notifications
+    // Fields:
+    //   - title: string (required)
+    //   - message: string (required)
+    //   - createdAt: timestamp (required)
+    //
+    // Collection: global_chat
+    // Fields:
+    //   - text: string (required, < 500 chars)
+    //   - uid: string (required)
+    //   - displayName: string (required)
+    //   - createdAt: timestamp (required)
+    //
+    // Collection: typing_status
+    // Fields:
+    //   - name: string (required)
+    //   - timestamp: timestamp (required)
+    //
+    // ===============================================================
+
+    // Helper Functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      return isAuthenticated() &&
+        ((exists(/databases/$(database)/documents/users/$(request.auth.uid)) && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin') ||
+          (request.auth.token.email == "sukhchain93581@gmail.com" && request.auth.token.email_verified == true));
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function isValidEmail(email) {
+      return email is string && email.matches("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$");
+    }
+
+    // Collection Rules
+    match /users/{userId} {
+      allow read: if isOwner(userId) || isAdmin();
+      allow create: if isAuthenticated() && isOwner(userId) && request.resource.data.role == 'user';
+      allow update: if isAdmin() || (isOwner(userId) && request.resource.data.role == resource.data.role);
+    }
+
+    match /giveaways/{giveawayId} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
+    }
+
+    match /giveaway_participants/{participantId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
+      allow delete: if isAdmin();
+    }
+
+    match /services/{serviceId} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
+    }
+
+    match /categories/{categoryId} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
+    }
+
+    match /orders/{orderId} {
+      allow read: if isAdmin() || (isAuthenticated() && resource.data.userId == request.auth.uid);
+      allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
+      allow update, delete: if isAdmin();
+    }
+
+    match /fundRequests/{requestId} {
+      allow read: if isAdmin() || (isAuthenticated() && resource.data.userId == request.auth.uid);
+      allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
+      allow update, delete: if isAdmin();
+    }
+
+    match /notifications/{notificationId} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
+    }
+
+    match /settings/app_config {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /settings/admin_config {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
+    }
+
+    match /settings/spinner_config {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
+    }
+
+    match /settings/ai_config {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
+    }
+
+    match /settings/{settingId} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
+    }
+
+    match /global_chat/{messageId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated() && 
+        request.resource.data.uid == request.auth.uid &&
+        request.resource.data.text is string &&
+        request.resource.data.text.size() > 0 &&
+        request.resource.data.text.size() <= 500 &&
+        request.resource.data.displayName is string &&
+        request.resource.data.createdAt == request.time;
+      allow update, delete: if isAdmin();
+    }
+
+    match /typing_status/{userId} {
+      allow read: if isAuthenticated();
+      allow write, delete: if isOwner(userId);
+    }
+
+    match /leaderboard/{userId} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin() || (isAuthenticated() && request.auth.uid == userId);
+    }
+  }
+}
